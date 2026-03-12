@@ -1,0 +1,4 @@
+timestamp,source_ip,destination_ip,port,action,threat_level
+2025-09-16 10:30:15,192.168.1.50,203.0.113.25,443,blocked,medium
+2025-09-16 10:31:22,10.0.0.100,'malicious-site.com',80,allowed,high
+2025-09-16 10:32:45,192.168.1.75,'8.8.8.8',53,allowed,low'

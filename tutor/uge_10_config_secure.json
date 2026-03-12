@@ -1,0 +1,5 @@
+{
+    "server": "Ubuntu",
+    "port": 443,
+    "secure_mode": true
+}
