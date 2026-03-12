@@ -7,9 +7,11 @@ def list_slicing():
     for i in full_name.split():
         print(i)
 
-    x = [1,2,3,4,42]
+    
 
 def set_test():
+    x = [1,2,3,4,42]
+
     print(x[2:-1])
 
     test_set = set()

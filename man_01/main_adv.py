@@ -44,6 +44,7 @@ def generate_csvs(incident_path = "incident.json") -> None:
     except Exception as err:
         print(f"Oh no. My {err}")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--Input", help="Path to incident json")
