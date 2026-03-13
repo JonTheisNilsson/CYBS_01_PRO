@@ -1,11 +1,14 @@
 import json
 import csv
 import argparse
+import logging
 
 def generate_csvs(incident_path = "incident.json") -> None:
     try:
         with open (incident_path, 'r') as file: 
             report = json.load(file)
+
+        logger.info(f"Loaded json file {incident_path}")
 
         alerts = report["alerts"]
 
@@ -31,7 +34,7 @@ def generate_csvs(incident_path = "incident.json") -> None:
 
                 for domain in alert["entities"]["domains"]:
                     csv_writer1.writerow([alert_id, machine_id, first_activity, domain])
-
+                
                 for file_hash in alert["entities"]["fileHashes"]:
                     csv_writer2.writerow([alert_id, machine_id, first_activity, file_hash])
 
@@ -41,7 +44,10 @@ def generate_csvs(incident_path = "incident.json") -> None:
                 for process in alert["entities"]["processes"]:
                     csv_writer4.writerow([alert_id, machine_id, first_activity, process])
 
+        logger.info(f"Wrote csv-file(s)")
+
     except Exception as err:
+        logger.error(err)
         print(f"Oh no. My {err}")
 
 
@@ -49,6 +55,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--Input", help="Path to incident json")
     args = parser.parse_args()
+
+    logging.basicConfig(
+        filename="app.log",
+        encoding="utf-8",
+        filemode="a",
+        format="{asctime} - {levelname} - {message}",
+        style="{",
+        datefmt="%Y-%m-%d %H:%M",
+    )
+    
+    logger = logging.getLogger("SimpleLogger")
+    logger.setLevel(logging.INFO)
 
     if args.Input:
         generate_csvs(args.Input)
