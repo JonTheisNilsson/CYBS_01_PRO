@@ -3,7 +3,7 @@ import csv
 import argparse
 import logging
 
-def generate_csvs(incident_path = "incident.json") -> None:
+def main(incident_path = "incident.json") -> None:
     try:
         with open (incident_path, 'r') as file: 
             report = json.load(file)
@@ -69,6 +69,6 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
 
     if args.Input:
-        generate_csvs(args.Input)
+        main(args.Input)
     else:
-        generate_csvs()
+        main()
