@@ -3,7 +3,7 @@ import csv
 import argparse
 import logging
 
-def main(incident_path = "incident.json") -> None:
+def main(incident_path: str = "incident.json") -> None:
     try:
         with open (incident_path, 'r') as file: 
             report = json.load(file)
