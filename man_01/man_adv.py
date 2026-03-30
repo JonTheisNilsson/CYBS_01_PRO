@@ -3,7 +3,10 @@ import csv
 import argparse
 import logging
 
-def main(incident_path: str = "incident.json") -> None:
+
+def generate_csvs(incident_path: str = "incident.json") -> None:
+    logger = setup_logger()
+
     try:
         with open (incident_path, 'r') as file: 
             report = json.load(file)
@@ -51,24 +54,32 @@ def main(incident_path: str = "incident.json") -> None:
         print(f"Oh no. My {err}")
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--Input", help="Path to incident json")
-    args = parser.parse_args()
-
+def setup_logger(log_path = "app.log") -> logging.Logger:
     logging.basicConfig(
-        filename="app.log",
+        filename=log_path,
         encoding="utf-8",
         filemode="a",
         format="{asctime} - {levelname} - {message}",
         style="{",
         datefmt="%Y-%m-%d %H:%M",
     )
-    
+
     logger = logging.getLogger("SimpleLogger")
     logger.setLevel(logging.INFO)
 
+    return logger
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--Input", help="Path to incident json")
+    args = parser.parse_args()
+
     if args.Input:
-        main(args.Input)
+        generate_csvs(args.Input)
     else:
-        main()
+        generate_csvs()
+
+
+if __name__ == "__main__":
+    main()

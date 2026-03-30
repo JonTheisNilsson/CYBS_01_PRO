@@ -7,8 +7,7 @@
             "detectionSource": "Microsoft Defender for Identity",
             "entities": {
                 "domains": [
-                    "evil-download.org",
-                    "suspicious-link.co"
+
                 ],
                 "emails": [
                     "admin@fabrikam.com"
