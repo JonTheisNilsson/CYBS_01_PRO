@@ -1,28 +1,44 @@
 import json
 import sqlite3
+import datetime
+import time
 
 import requests
 
-from structs import incident, alert
-
-URL = r"http://164.92.167.24"
-email = "joni0003@stud.ek.dk"
-
-token = 'student-5zlzrL2_T5uHjdvymH8ccA'
+from structs import incident, alert, convert_to_incident_dc
+import db
 
 
-
-
-def get_token():
+def get_token(url, email) -> str:
     ''' 
     check local
     check expired
     if: request_token()
     '''
-    raise NotImplemented
+    try:
+        with open ("token", 'r') as file: 
+            token_object = json.load(file)
+
+        token = token_object["token"]
+        expires_at = token_object["expires_at"]
+        expires_at = datetime.datetime.fromisoformat(expires_at)
+        print(expires_at)
+    except Exception as err:
+        token = None
+
+    if token is None or expires_at.timestamp() < datetime.datetime.now().timestamp():  ## todo: test sammenligning af datetime
+        r = request_token(url, email)
+        print("new token requested")
+        with open("token", 'w') as file:
+            
+            file.write(json.dumps(r, indent=4))
+        token = r["token"]
+
+    print("token got")
+    return token
 
 
-def request_token():
+def request_token(url, email):
     '''  
     POST /api/auth/token
     Content-Type: application/json
@@ -30,83 +46,93 @@ def request_token():
     {"email": "your.name@school.dk}
     '''
     h = {"Content-Type": "application/json"}
-    payload = {"email": email}
-    r = requests.post(URL+"/api/auth/token", headers=h, json=payload)
+    r = requests.post(url + "/api/auth/token", headers=h, json={"email": email})
     
     r = r.json()
-    print(r)
-    print(type(r))
+
+    return r
+
+
+def get_all_incidents(url, token)-> list[incident]:
+    incidents = []
+
+    number_of_incidents = 205  ## todo: get from stats
+    left = number_of_incidents
+    skip = 0
+
+    while(left > 0):
+        print("left:",left)
+
+        if left > 100:
+            top = 100
+        else:
+            top = left 
+
+        response = request_incidents(url, token, top=top, skip=skip)
+        json = response.json()
+        left -= top
+        skip += 100
+
+        print(len(json["value"]))
+
+        # convert to dataclasses
+        for incident in json["value"]:
+            incidents.append(convert_to_incident_dc(incident))
+
+        print("wait")
+        time.sleep(1.5)
+
+    return incidents
+
+
+def request_incidents(url, token, top=10, skip=0):
+    # GET /api/incidents
     
-    '''
-        {"email":"joni0003@stud.ek.dk","expires_at":"2026-03-31T12:05:34.290336+00:00","expires_in_hours":13.27,"instructions":"Use this token in Authorization header: Bearer <token>","message":"Token retrieved successfully","note":"Token will expire in 13.3 hours. Request a new token if it expires.","token":"student-5zlzrL2_T5uHjdvymH8ccA"}
-
-    '''
-
-
-
-def request_incidents():
-    ''' GET /api/incidents
-    '''
     h = {"Authorization": "Bearer " + token}
-    r = requests.get(URL+"/api/incidents", headers=h)
-    r = r.json()
-    print(r)
+    payload ={"$top": top,
+              "$skip": skip}
+    r = requests.get(url + "/api/incidents", headers=h, params=payload)
+
+    return r
 
 
-
-def request_incident(id: str= "INC1108"):
-    ''' GET /api/incidents/{incidentId}
-    returns the full object including all alerts and entities
-    '''
+def request_incident(url, token, id: str= "INC1108"):
+    # GET /api/incidents/{incidentId}
+ 
     h = {"Authorization": "Bearer " + token}
-    r = requests.get(URL+"/api/incidents/" + id, headers=h)
-    r = r.json()
-    print(r)
+    r = requests.get(url + "/api/incidents/" + id, headers=h)
 
-
-
-def get_statistics():
-    ''' GET /api/incidents/summary 
-    return 
-    '''
-    h = {"Authorization": "Bearer " + token}
-    r = requests.get(URL+"/api/incidents/summary", headers=h)
-    r = r.json()
-    print(r)
-
-
-
-####################
-
-def init_db(connection):
-    cursor = connection.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS alerts (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        alertID     TEXT,
-        incidentID  TEXT,
-        category    TEXT,
-        machineID   TEXT,
-        firstSeen   TEXT,
-        timestamp   TEXT
-        );"""
-    )
+    return r
     
-    connection.commit()
 
-def add_alert(connection, alert:alert|None=None):
-    cursor = connection.cursor()
-    cursor.execute(
-        "INSERT INTO alerts (alertID,incidentID,category, machineID, firstSeen , timestamp ) VALUES (?, ?, ?, ?, ?, ?)",
-        ("A", "b", 'c','d','e','f')
-    )
-    connection.commit()
+def get_statistics(url, token):
+    # GET /api/incidents/summary 
+
+    h = {"Authorization": "Bearer " + token}
+    r = requests.get(url + "/api/incidents/summary", headers=h)
+
+    return r
 
 
 def main():
+    url = r"http://164.92.167.24"
+    email = "joni0003@stud.ek.dk"
+    token = 'student-5zlzrL2_T5uHjdvymH8ccA'
+
+    token = get_token(url, email)
+    
+    
+    incidents = get_all_incidents(url, token)
+
+
+
     with sqlite3.connect("alerts.db") as connection:
-        init_db(connection)
-        add_alert(connection)
+        db.init_db(connection)
+
+        for incident in incidents:
+            for alert in incident.alerts:
+                db.add_alert(connection, alert, incident.incident_id)
+
 
 
 if __name__ == "__main__":
