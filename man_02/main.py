@@ -2,6 +2,7 @@ import json
 import sqlite3
 from datetime import datetime
 import time
+import sys
 
 import requests
 from requests import Response
@@ -19,10 +20,10 @@ def get_token(url: str, email: str) -> str:
         expires_at = datetime.fromisoformat(expires_at)
         
     except Exception as err:
-        print("failure to find token")# catch-all
+        print("failure to find token", err)  # catch-all
         token = None
 
-    if expires_at.timestamp() < datetime.now().timestamp():## todo: test sammenligning af datetime
+    if expires_at.timestamp() < datetime.now().timestamp():  # todo: test sammenligning af datetime
         print("token expired")
         token = None
 
@@ -39,6 +40,7 @@ def get_token(url: str, email: str) -> str:
     return token
 
 
+# test: headeren burde være overflødig siden vi sætter den med json=
 def request_token(url: str, email: str) -> Response:
     '''  
     POST /api/auth/token
@@ -55,9 +57,30 @@ def request_token(url: str, email: str) -> Response:
 def get_all_incidents(url: str, token: str):
     incidents = []
     skip = 0
+    retry = True
 
     while(True):
-        response = request_incidents(url, token, top=100, skip=skip)
+        try:
+            response = request_incidents(url, token, top=100, skip=skip)
+        except requests.exceptions.Timeout as err:
+            if retry: 
+                print("Timeout. Retrying in 5 sec")
+                time.sleep(5)
+                retry = False
+                continue
+
+            print("Timeout. Retried once", file=sys.stderr)
+            raise SystemExit(1)
+        except requests.HTTPError as err:
+            print("http error", file=sys.stderr)
+            raise SystemExit(1)
+        except requests.RequestException as err:
+            print("RequestException", file=sys.stderr)
+            raise SystemExit(1)
+        except Exception as err:
+            print("oh no, my {err}", file=sys.stderr)
+            raise SystemExit(1)      
+                
         response = response.json()
 
         for i in response["value"]:
@@ -93,13 +116,13 @@ def output_to_db(incidents, database="alerts.db") -> None:
                 for alert in incident["alerts"]:
                     db.add_alert(connection, alert, incident["incidentId"])
     except Exception as err:
+        print("db error. attempting rollback")
         connection.rollback()
 
 
 def main() -> None:
     url = r"http://164.92.167.24"
     email = "joni0003@stud.ek.dk"
-    token = 'student-5zlzrL2_T5uHjdvymH8ccA'
 
     token = get_token(url, email)
     
