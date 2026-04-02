@@ -1,44 +1,45 @@
 import json
 import sqlite3
-import datetime
+from datetime import datetime
 import time
 
 import requests
+from requests import Response
 
-from structs import incident, alert, convert_to_incident_dc
 import db
 
 
-def get_token(url, email) -> str:
-    ''' 
-    check local
-    check expired
-    if: request_token()
-    '''
+def get_token(url: str, email: str) -> str:
     try:
         with open ("token", 'r') as file: 
             token_object = json.load(file)
 
         token = token_object["token"]
         expires_at = token_object["expires_at"]
-        expires_at = datetime.datetime.fromisoformat(expires_at)
-        print(expires_at)
+        expires_at = datetime.fromisoformat(expires_at)
+        
     except Exception as err:
+        print("failure to find token")# catch-all
         token = None
 
-    if token is None or expires_at.timestamp() < datetime.datetime.now().timestamp():  ## todo: test sammenligning af datetime
-        r = request_token(url, email)
+    if expires_at.timestamp() < datetime.now().timestamp():## todo: test sammenligning af datetime
+        print("token expired")
+        token = None
+
+    if token is None:  
         print("new token requested")
+        response = request_token(url, email)
+        response = response.json()
+        
         with open("token", 'w') as file:
-            
-            file.write(json.dumps(r, indent=4))
-        token = r["token"]
+            file.write(json.dumps(response, indent=4))
+        token = response["token"]
 
     print("token got")
     return token
 
 
-def request_token(url, email):
+def request_token(url: str, email: str) -> Response:
     '''  
     POST /api/auth/token
     Content-Type: application/json
@@ -48,44 +49,31 @@ def request_token(url, email):
     h = {"Content-Type": "application/json"}
     r = requests.post(url + "/api/auth/token", headers=h, json={"email": email})
     
-    r = r.json()
-
     return r
 
 
-def get_all_incidents(url, token)-> list[incident]:
+def get_all_incidents(url: str, token: str):
     incidents = []
-
-    number_of_incidents = 205  ## todo: get from stats
-    left = number_of_incidents
     skip = 0
 
-    while(left > 0):
-        print("left:",left)
+    while(True):
+        response = request_incidents(url, token, top=100, skip=skip)
+        response = response.json()
 
-        if left > 100:
-            top = 100
+        for i in response["value"]:
+            incidents.append(i)
+
+        if "@odata.nextLink" in response:
+            skip += 100
+            print("wait")
+            time.sleep(1.5)
         else:
-            top = left 
-
-        response = request_incidents(url, token, top=top, skip=skip)
-        json = response.json()
-        left -= top
-        skip += 100
-
-        print(len(json["value"]))
-
-        # convert to dataclasses
-        for incident in json["value"]:
-            incidents.append(convert_to_incident_dc(incident))
-
-        print("wait")
-        time.sleep(1.5)
+            break
 
     return incidents
 
 
-def request_incidents(url, token, top=10, skip=0):
+def request_incidents(url: str, token: str, top=10, skip=0) -> Response:
     # GET /api/incidents
     
     h = {"Authorization": "Bearer " + token}
@@ -96,43 +84,28 @@ def request_incidents(url, token, top=10, skip=0):
     return r
 
 
-def request_incident(url, token, id: str= "INC1108"):
-    # GET /api/incidents/{incidentId}
- 
-    h = {"Authorization": "Bearer " + token}
-    r = requests.get(url + "/api/incidents/" + id, headers=h)
-
-    return r
-    
-
-def get_statistics(url, token):
-    # GET /api/incidents/summary 
-
-    h = {"Authorization": "Bearer " + token}
-    r = requests.get(url + "/api/incidents/summary", headers=h)
-
-    return r
+def output_to_db(incidents, database="alerts.db") -> None:
+    try:
+        with sqlite3.connect(database) as connection:
+            db.init_db(connection)
+        
+            for incident in incidents:
+                for alert in incident["alerts"]:
+                    db.add_alert(connection, alert, incident["incidentId"])
+    except Exception as err:
+        connection.rollback()
 
 
-def main():
+def main() -> None:
     url = r"http://164.92.167.24"
     email = "joni0003@stud.ek.dk"
     token = 'student-5zlzrL2_T5uHjdvymH8ccA'
 
     token = get_token(url, email)
     
-    
     incidents = get_all_incidents(url, token)
 
-
-
-    with sqlite3.connect("alerts.db") as connection:
-        db.init_db(connection)
-
-        for incident in incidents:
-            for alert in incident.alerts:
-                db.add_alert(connection, alert, incident.incident_id)
-
+    output_to_db(incidents, "simple.db")
 
 
 if __name__ == "__main__":

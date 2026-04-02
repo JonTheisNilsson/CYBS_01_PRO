@@ -1,7 +1,8 @@
 import datetime
 
+import structs
 
-def init_db(connection) -> None:
+def init_db(connection):
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS alerts (
@@ -17,15 +18,10 @@ def init_db(connection) -> None:
     connection.commit()
 
 
-def add_alert(connection, alert, incident_id:str) -> None:
+def add_alert(connection, a:structs.Alert, incident_id:str):
     cursor = connection.cursor()
     cursor.execute(
         "INSERT INTO alerts (alertID, incidentID, category, machineID, firstSeen, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
-        (alert["alertId"], 
-         incident_id, 
-         alert["category"], 
-         alert["machineId"], 
-         alert["firstSeen"], 
-         datetime.datetime.now())
+        (a.alert_id, incident_id, a.category, a.machine_id, a.first_seen, datetime.datetime.now())
     )
     connection.commit()
