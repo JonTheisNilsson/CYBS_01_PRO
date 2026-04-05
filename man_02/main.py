@@ -116,7 +116,7 @@ def output_to_db(incidents, database="alerts.db") -> None:
                 for alert in incident["alerts"]:
                     db.add_alert(connection, alert, incident["incidentId"])
     except Exception as err:
-        print("db error. attempting rollback")
+        print("db error. attempting rollback", file=sys.stderr)
         connection.rollback()
 
 
