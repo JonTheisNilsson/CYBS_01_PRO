@@ -97,25 +97,36 @@ def ex3():
 
     
 '''Exercise 4: IP Scanner (for loop with range)
-Topics: While loops, counters, boolean conditions
-Create a password verification system with limited attempts:
-# Correct password stored in system
-correct_password = "Cyber2026!"
-attempts = 0
-max_attempts = 3
+Topics: For loops, range function, string formatting
+Create a simple IP address scanner simulation:
+# Network to scan: 192.168.1.1 to 192.168.1.20
 # Your program should:
-# 1. Use a while loop to allow up to 3 attempts
-# 2. Ask user for password input (use input() function)
-# 3. Check if password matches correct_password
-# 4. If correct: print "Access granted" and exit loop
-# 5. If wrong: increment attempts, show remaining attempts
-# 6. If max attempts reached: print "Account locked"
-Expected skills: while loops, break statement, input validation
+# 1. Use a for loop with range(1, 21)
+# 2. Print "Scanning 192.168.1.X..." for each IP
+# 3. For IPs ending in 5, 10, 15: print " → Device found!"
+# 4. For IP ending in 13: print " → SUSPICIOUS DEVICE!" and break
+# 5. Count total IPs scanned before breaking
+Expected skills: for loops, range(), break, conditionals in loops
 '''
+
+def ex4():
+    network_range = range(1,21)
+    count = 0
+
+    for i in network_range:
+        count += 1
+        print(f"Scanning 192.168.1.{i}...", end="")
+        if i in [5, 10, 15]:
+            print(" → Device found!")
+        if i == 13:
+            print(" → SUSPICIOUS DEVICE!")
+    print(f"Scanned {count} networks.")
+
 
 '''Exercise 5: Log Filter (for loop with continue)
 Topics: For loops, continue statement, lists
-Process security logs and filter out noise:
+Process security logs and filter out noise:'''
+
 security_logs = [
 "User login successful",
 "Test log entry",
@@ -126,7 +137,9 @@ security_logs = [
 "Test data sync",
 "Unauthorized access attempt"
 ]
-# Your program should:
+
+
+'''# Your program should:
 # 1. Loop through all log entries
 # 2. Use continue to skip any entry containing "Test"
 # 3. Print remaining entries with line numbers
@@ -134,6 +147,17 @@ security_logs = [
 # 5. Count how many were skipped
 Expected skills: for loops, continue, string methods, counters
 '''
+
+def ex5(logs=security_logs):
+    count_skipped = 0
+    count = 0
+    for id, log in enumerate(logs):
+        if "test" in log.lower():
+            count_skipped += 1
+            continue
+        count += 1
+        print(f"{id} - {log}")
+
 
 '''Exercise 6: Security Check Function
 Topics: Functions, parameters, return values, boolean logic
@@ -154,6 +178,12 @@ Create a function to validate security configurations:
 # check_security_config(False, False, False) # Should return False
 Expected skills: Function definition, parameters, return values, boolean logic
 '''
+
+def check_security_config(firewall_enabled:bool, antivirus_updated:bool, encryption_on:bool) -> bool:
+    res = all(locals().values())
+    if not res: print("oh no")
+    return res
+
 
 '''Exercise 7: Calculate Risk Score Function
 Topics: Functions, return values, mathematical operations
@@ -198,17 +228,26 @@ Create a safe division function with error handling:
 # Should return None with error message
 Expected skills: try/except/finally, exception handling, functions
 '''
+def safe_divide(numerator: int|float, denominator:int|float)->float|None:
+    try:
+        res = numerator / denominator
+        return res
+    except ZeroDivisionError as e:
+        print(e)
+        return None 
+    finally:
+        print("Division attempt complete")
 
 
 '''Exercise 9: Reading Security Alerts from File
 Topics: File reading, pathlib, with statement
 Read and process a text file containing security alerts:
-# First, create a file called "alerts.txt" with these lines:
+# First, create a file called "alerts.txt" with these lines:'''
 # Login failed from 192.168.1.50
 # Malware detected on workstation-05
 # System update completed
 # Suspicious outbound traffic detected
-# Your program should:
+'''# Your program should:
 # 1. Use pathlib to get current working directory
 # 2. Create filepath using Path.cwd().joinpath("alerts.txt")
 # 3. Open file with "with" statement
@@ -217,6 +256,20 @@ Read and process a text file containing security alerts:
 # 6. Print lines containing "detected" or "failed“
 Expected skills: File reading, pathlib module, with statement, string methods
 '''
+from pathlib import Path
+
+def ex9():
+    p = Path.cwd().joinpath("alerts.txt")
+    count = 0
+
+    with open(p, 'r') as file:
+        for line in file.readlines():
+            print(line)
+            count += 1
+            if "detected" in line.lower() or "failed" in line.lower():
+                print(line)
+
+
 
 
 '''Exercise 10: Writing Incident Log
@@ -237,6 +290,13 @@ Create a function that logs security incidents to a file:
 # Then read the file back and print all incidents
 Expected skills: File writing, append mode, functions, with statement
 '''
+
+def log_incident(incident_type:str, description:str):
+    with open ("incident_log.txt", 'a') as file:
+        file.write(f"{incident_type.upper()} {description}")
+        file.write("")
+
+
 
 '''
 Comprehensive(11-13)
@@ -333,15 +393,11 @@ def write_to_csv(alerts: list, out:str="critical_alerts.txt") -> None:
 
 
 
-
-
-
 '''Exercise 12: JSON Threat Intelligence Parser
 Topics: JSON, file operations, dictionaries, loops
 Work with JSON formatted threat intelligence data:
 # Part 1: Create threat data
 # Create a file "threat_intel.json" with this structure:
-
 
 # Part 2: Read and analyze
 # Your program should:
@@ -349,7 +405,19 @@ Work with JSON formatted threat intelligence data:
 # 2. Count total threats
 # 3. Count threats by severity level (create a dictionary)
 # 4. Find all unique source IPs (use a set)
-# 5. Print all "high" or "critical" threats with their IDs
+# 5. Print all "high" or "critical" threats with their IDs'''
+from collections import Counter
+
+
+def ex12():
+    with open(Path.cwd().joinpath("threat_intel.json"), 'r') as file:
+        js = json.dumps(file)
+    count = Counter(js)
+    print(count)
+
+ex12()
+
+'''
 # Part 3: Add new threat
 # Create a new threat dictionary:'''
 
@@ -360,7 +428,7 @@ new_threat = {
     "indicators": ["encrypt.exe", "ransom.note"],
     "source_ips": ["10.0.0.50"]
 }
-''''''
+'''
 # Add it to the threats list and write back to JSON file
 # Use indent=2 for readable formatting
 Expected skills: JSON operations, dictionaries, lists, sets, file I/O
@@ -402,4 +470,4 @@ Create a system to generate and analyze CSV security reports:
 # medium, 1
 # low, 1
 Expected skills: CSV reading/writing, dictionaries, loops, data aggregation
-''''''
+'''
