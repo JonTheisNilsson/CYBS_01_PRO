@@ -410,9 +410,16 @@ from collections import Counter
 
 
 def ex12():
-    with open(Path.cwd().joinpath("threat_intel.json"), 'r') as file:
-        js = json.dumps(file)
-    count = Counter(js)
+    with open("threat_intel.json", 'r') as file:
+        js = json.load(file)
+    threats = js["threats"]
+    count = 0
+    count_critical = 0
+    for threat in threats:
+        print(threat)
+        count+=1
+
+
     print(count)
 
 ex12()
