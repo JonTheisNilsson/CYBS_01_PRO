@@ -1,25 +1,41 @@
 {
-"threats": [
-        {
-        "threat_id": "THR-001",
-        "type": "malware",
-        "severity": "high",
-        "indicators": ["malicious.exe", "backdoor.dll"],
-        "source_ips": ["198.51.100.1", "198.51.100.2"]
-        },
-        {
-        "threat_id": "THR-002",
-        "type": "phishing",
-        "severity": "medium",
-        "indicators": ["fake-login.html"],
-        "source_ips": ["203.0.113.50"]
-        },
-        {
-        "threat_id": "THR-003",
-        "type": "ddos",
-        "severity": "critical",
-        "indicators": ["flood-attack"],
-        "source_ips": ["192.0.2.100", "192.0.2.101", "192.0.2.102"]
-        }
-    ]
+  "threats": [
+    {
+      "threat_id": "THR-001",
+      "type": "malware",
+      "severity": "high",
+      "indicators": [
+        "malicious.exe",
+        "backdoor.dll"
+      ],
+      "source_ips": [
+        "198.51.100.1",
+        "198.51.100.2"
+      ]
+    },
+    {
+      "threat_id": "THR-002",
+      "type": "phishing",
+      "severity": "medium",
+      "indicators": [
+        "fake-login.html"
+      ],
+      "source_ips": [
+        "203.0.113.50"
+      ]
+    },
+    {
+      "threat_id": "THR-003",
+      "type": "ddos",
+      "severity": "critical",
+      "indicators": [
+        "flood-attack"
+      ],
+      "source_ips": [
+        "192.0.2.100",
+        "192.0.2.101",
+        "192.0.2.102"
+      ]
+    }
+  ]
 }

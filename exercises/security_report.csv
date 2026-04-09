@@ -1,0 +1,6 @@
+"timestamp","event_type","severity","source_ip","destination_ip","action_taken"
+"2026-03-27 08:15:00","login_failed","medium","192.168.1.50","10.0.0.1","blocked"
+"2026-03-27 08:20:00","malware","critical","192.168.1.105","10.0.0.5","quarantined"
+"2026-03-27 08:25:00","port_scan","high","203.0.113.10","10.0.0.1","blocked"
+"2026-03-27 08:30:00","login_success","low","192.168.1.20","10.0.0.1","allowed"
+"2026-03-27 08:35:00","data_exfil","critical","192.168.1.105","8.8.8.8","blocked"

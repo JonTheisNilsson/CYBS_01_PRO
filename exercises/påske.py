@@ -422,7 +422,7 @@ def ex12():
 
     print(count)
 
-ex12()
+#ex12()
 
 '''
 # Part 3: Add new threat
@@ -435,6 +435,17 @@ new_threat = {
     "indicators": ["encrypt.exe", "ransom.note"],
     "source_ips": ["10.0.0.50"]
 }
+
+def ex12_part3():
+    with open("threat_intel.json", 'r') as file:
+        j = json.load(file)
+    j["threats"].append(new_threat)
+    j = json.dumps(j, indent=2)
+    with open("threat_intel.json", 'w') as file:
+        file.write(j)
+
+#ex12_part3()
+
 '''
 # Add it to the threats list and write back to JSON file
 # Use indent=2 for readable formatting
@@ -447,15 +458,30 @@ Create a system to generate and analyze CSV security reports:
 # Part 1: Create sample data
 # Create "security_report.csv" with these columns:
 # timestamp, event_type, severity, source_ip, destination_ip, action_taken
-# Sample data (write this to CSV):
-[
-["2026-03-27 08:15:00", "login_failed", "medium", "192.168.1.50", "10.0.0.1", "blocked"],
-["2026-03-27 08:20:00", "malware", "critical", "192.168.1.105", "10.0.0.5", "quarantined"],
-["2026-03-27 08:25:00", "port_scan", "high", "203.0.113.10", "10.0.0.1", "blocked"],
-["2026-03-27 08:30:00", "login_success", "low", "192.168.1.20", "10.0.0.1", "allowed"],
-["2026-03-27 08:35:00", "data_exfil", "critical", "192.168.1.105", "8.8.8.8", "blocked"]
+# Sample data (write this to CSV):'''
+
+import csv
+
+sample_data = [
+    ["2026-03-27 08:15:00", "login_failed", "medium", "192.168.1.50", "10.0.0.1", "blocked"],
+    ["2026-03-27 08:20:00", "malware", "critical", "192.168.1.105", "10.0.0.5", "quarantined"],
+    ["2026-03-27 08:25:00", "port_scan", "high", "203.0.113.10", "10.0.0.1", "blocked"],
+    ["2026-03-27 08:30:00", "login_success", "low", "192.168.1.20", "10.0.0.1", "allowed"],
+    ["2026-03-27 08:35:00", "data_exfil", "critical", "192.168.1.105", "8.8.8.8", "blocked"]
 ]
 
+
+def ex13_1():
+    with open("security_report.csv", 'w') as file:
+        header = ["timestamp", "event_type", "severity", "source_ip", "destination_ip", "action_taken"]
+        csv_writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_ALL)
+        csv_writer.writerow(header)
+        
+        csv_writer.writerows(sample_data)
+    
+ex13_1()
+
+'''
 # Part 2: Write CSV file
 # Your program should:
 # 1. Use csv.writer to create the file
@@ -467,7 +493,45 @@ Create a system to generate and analyze CSV security reports:
 # 2. Count events by severity (create severity_counts dict)
 # 3. Find all unique source IPs that were blocked
 # 4. Count total critical events
-# 5. Create a list of all malware and data_exfil events
+# 5. Create a list of all malware and data_exfil events'''
+
+from collections import Counter
+
+def ex13_3():
+    severity_counts = dict()
+    unique_ip = set()
+    count_critical = 0
+    malware_and_data_exfil_events = []
+
+    with open("security_report.csv", 'r') as file:
+        csv_data = csv.DictReader(file)
+        for row in csv_data:
+            sev = row["severity"]
+            severity_counts[sev] = severity_counts.get(sev, 0) + 1
+
+            unique_ip.add(row["source_ip"])
+            
+            if sev.lower() == "critical":
+                count_critical += 1
+
+            if row["event_type"] == "malware" or row["event_type"] == "data_exfil":
+                malware_and_data_exfil_events.append(row)
+            
+
+
+    y = (Counter(severity_counts).most_common())
+    print(unique_ip)
+    print(count_critical)
+    print(malware_and_data_exfil_events)
+
+
+    with open ("summary_report.csv", 'w') as file:
+        csv_writer = csv.writer(file)
+        csv_writer.writerow(['severity', 'count'])
+        csv_writer.writerows(sorted(severity_counts.items()))
+
+ex13_3()
+'''
 # Part 4: Generate summary report
 # Write a new CSV file "summary_report.csv" with:
 # severity, count
